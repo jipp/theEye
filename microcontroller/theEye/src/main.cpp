@@ -49,8 +49,8 @@ char mqtt_username[16] = "";
 char mqtt_password[16] = "";
 char mqtt_port[6] = "1883";
 String publishTopic = "/value";
-int pirPin = D1;
-int buttonPin = D2;
+int pirPin = D5;
+int buttonPin = D7;
 bool pirDetected = false;
 bool buttonDetected = false;
 
@@ -101,8 +101,9 @@ void loop() {
         publishValues();
       }
       if ((digitalRead(buttonPin) == HIGH) and (buttonDetected)) {
-        digitalWrite(BUILTIN_LED, HIGH);
-        buttonDetected = true;
+        buttonDetected = false;
+        publishValues();
+        delay(50);
       }
       if ((digitalRead(pirPin) == HIGH) and (!pirDetected)) {
         digitalWrite(BUILTIN_LED, LOW);
@@ -110,8 +111,11 @@ void loop() {
         publishValues();
       }
       if ((digitalRead(pirPin) == LOW) and (pirDetected)) {
-        digitalWrite(BUILTIN_LED, HIGH);
         pirDetected = false;
+        publishValues();
+      }
+      if (!pirDetected and !buttonDetected) {
+        digitalWrite(BUILTIN_LED, HIGH);
       }
     }
   }
@@ -146,6 +150,9 @@ void setupWiFiManager(bool autoConnect) {
   WiFiManagerParameter custom_mqtt_username("username", "mqtt username", mqtt_username, 16);
   WiFiManagerParameter custom_mqtt_password("password", "mqtt password", mqtt_password, 16);
   WiFiManager wifiManager;
+
+  //wifiManager.resetSettings();
+
   #ifdef VERBOSE
   wifiManager.setDebugOutput(true);
   #else
