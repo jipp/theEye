@@ -2,57 +2,53 @@
 
 $ini_array = parse_ini_file("photobooth.ini");
 
-function getFile($folder) {
-   chdir($folder);
-   $dir = '';
-
-   $arraylistafiles = glob($dir.'*.jpg');
-
-   return end($arraylistafiles);
+function createLockFile($lockFile) {
+   $handle = fopen($lockFile, "w") or die("Unable to open file!");
+   fclose($handle);
 }
 
-function showStartPage($folderThumb, $folderImage, $thumbRelativePath, $relativePath) {
-echo <<< EOT
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>photobooth</title>
-</head>
-<body>
-<a href="gallery">gallery</a>
-<br>
-<a href="
-EOT;
-
-echo $relativePath.getFile($folderThumb);
-
-echo <<< EOT
-">
-<img src="
-EOT;
-
-echo $thumbRelativePath.getFile($folderThumb);
-
-echo <<< EOT
-" title="
-EOT;
-
-echo getFile($folderImage);
-
-echo <<< EOT
-" width="256">
-</a>
-<form method="post" action="takePhoto.php">
-<input type="submit" value="take a photo">
-</form>
-</body>
-</html>
-EOT;
+function deleteLockFile($lockFile) {
+   unlink($lockFile);
 }
 
-showStartPage($ini_array['THUMB_PATH'], $ini_array['GALLERY_PATH'], $ini_array['RELATIVE_THUMB_PAT
-H'], $ini_array['RELATIVE_PATH']);
+function checkLockFile($lockFile) {
+   if (file_exists($lockFile)) {
+      return true;
+   } else {
+      return false;
+   }
+}
+
+function takePhoto($galleryPath) {
+   $date = new DateTime();
+   $name = $date->format('Ymd-His') . ".jpg";
+   $completeName = $galleryPath . $date->format('Ymd-His') . ".jpg";
+
+   $output = shell_exec("raspistill -t 1 -o $completeName 2>&1");
+   if ($output) {
+      echo "<pre>$output</pre>";
+   }
+   return $name;
+}
+
+function createThumb($galleryPath, $thumbPath, $imageName) {
+   $image = imagecreatefromjpeg($galleryPath.$imageName);
+   $width = imagesx($image);
+   $height = imagesy($image);
+   $widthNew = 160;
+   $heightNew = floor($height * ($widthNew / $width));
+   $imageTemp = imagecreatetruecolor( $widthNew, $heightNew );
+   imagecopyresized($imageTemp, $image, 0, 0, 0, 0, $widthNew, $heightNew, $width, $height);
+   imagejpeg($imageTemp, $thumbPath.$imageName);
+}
+
+if (!checkLockFile($ini_array['LOCK_FILE'])) {
+   createLockFile($ini_array['LOCK_FILE']);
+   $name = takePhoto($ini_array['GALLERY_PATH']);
+   createThumb($ini_array['GALLERY_PATH'], $ini_array['THUMB_PATH'], $name);
+   deleteLockFile($ini_array['LOCK_FILE']);
+   header ("refresh: 0; url=index.php");
+}
 
 ?>
 
