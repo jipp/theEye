@@ -33,10 +33,10 @@ def checkLockFile():
 
 def takePhoto(path):
    if (not checkLockFile()):
-      logging.warning("takePhoto")
       createLockFile()
       timestr = time.strftime("%Y%m%d-%H%M%S")
       cmd = "raspistill -t 1 -o {0}{1}.jpg 2>&1".format(path, timestr)
+      logging.warning(cmd)
       os.system(cmd)
       os.remove(LOCK_FILE)
    else:
@@ -58,7 +58,7 @@ def on_message(client, userdata, message):
    if (dictionary['button']):
       takePhoto(GALLERY)
    if (dictionary['pir']):
-      takePhoto("/tmp/")
+      takePhoto(GALLERY)
 
 
 def on_subscribe(client, userdata, mid, granted_qos):
