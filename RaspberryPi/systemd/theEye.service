@@ -1,0 +1,12 @@
+# cp theEye.service /lib/systemd/system/
+[Unit]
+Description=theEye daemon
+After=multi-user.target
+
+[Service]
+Type=simple
+RemainAfterExit=yes
+ExecStart=/data/theEye/RaspberryPi/systemd/main.py
+
+[Install]
+WantedBy=multi-user.target
