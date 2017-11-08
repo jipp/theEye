@@ -7,20 +7,27 @@ import json
 import logging
 import time
 import os
+import sys
+import ConfigParser
 
 
-logging.basicConfig(level=logging.WARNING)
-#logging.basicConfig(level=logging.INFO)
+#logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=logging.INFO)
 #logging.basicConfig(level=logging.DEBUG)
 
 
-BROKER_ADDRESS = 'theEye'
-USERNAME = 'esp8266'
-PASSWORD = '0acht15'
-NODE = '5ccf7f3c8da1'
-TOPIC = '/value'
-LOCK_FILE = '/run/takePhoto.lock'
-GALLERY = '/var/www/html/gallery/'
+config = ConfigParser.ConfigParser()
+config.read('/data/theEye/RaspberryPi/theEye.ini')
+
+
+LOCK_FILE = config.get('path', 'lock_file')
+GALLERY = config.get('path', 'gallery')
+BROKER_ADDRESS = config.get('mqtt', 'broker_address')
+USERNAME = config.get('mqtt', 'username')
+PASSWORD = config.get('mqtt', 'password')
+NODE = config.get('mqtt', 'node')
+TOPIC = config.get('mqtt', 'topic')
+PARAMETER = config.get('camera', 'parameter')
 
 
 def createLockFile():
@@ -31,11 +38,11 @@ def checkLockFile():
    return os.path.isfile(LOCK_FILE)
 
 
-def takePhoto(path):
+def takePhoto():
    if (not checkLockFile()):
       createLockFile()
       timestr = time.strftime("%Y%m%d-%H%M%S")
-      cmd = "raspistill -t 1 -o {0}{1}.jpg 2>&1".format(path, timestr)
+      cmd = "raspistill {2} -t 1 -o {0}{1}.jpg 2>&1".format(GALLERY, timestr, PARAMETER)
       logging.warning(cmd)
       os.system(cmd)
       os.remove(LOCK_FILE)
@@ -56,9 +63,11 @@ def on_message(client, userdata, message):
    dictionary['pir']     = payload['pir']
    logging.info('node: ' + node + ', button: ' + str(returnValue(dictionary, 'button')) + ', pir: ' + str(returnValue(dictionary, 'pir')))
    if (dictionary['button']):
-      takePhoto(GALLERY)
+      logging.info('button triggered')
+      takePhoto()
    if (dictionary['pir']):
-      takePhoto(GALLERY)
+      logging.info('pir triggered')
+      takePhoto()
 
 
 def on_subscribe(client, userdata, mid, granted_qos):
@@ -92,6 +101,7 @@ if __name__ == '__main__':
    try:
       main()
    except KeyboardInterrupt:
+      os.remove(LOCK_FILE)
       sys.exit('interrupted')
       pass
 
