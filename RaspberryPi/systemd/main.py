@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-#mosquitto_pub -h theeye -t 5ccf7f3c8da1/value -u esp8266 -P 0acht15 -m "{\"vcc\":3032,\"button\":false,\"pir\":true}"
+#mosquitto_pub -h theEye -t 5ccf7f3c8da1/value -u esp8266 -P 0acht15 -m "{\"vcc\":3032,\"button\":false,\"pir\":true}"
+#mosquitto_pub -h theEye -t 5ccf7f3c8da1/value -u esp8266 -P 0acht15 -m "{\"vcc\":3032,\"button\":true,\"pir\":false}"
+
 
 import paho.mqtt.client as mqtt
 import json
