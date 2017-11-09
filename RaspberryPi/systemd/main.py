@@ -27,9 +27,11 @@ GALLERY = config.get('path', 'gallery')
 BROKER_ADDRESS = config.get('mqtt', 'broker_address')
 USERNAME = config.get('mqtt', 'username')
 PASSWORD = config.get('mqtt', 'password')
-NODE = config.get('mqtt', 'node')
+NODES = config.get('mqtt', 'nodes').split(',')
 TOPIC = config.get('mqtt', 'topic')
+COMMAND = config.get('camera', 'command')
 PARAMETER = config.get('camera', 'parameter')
+EXTENSION = config.get('camera', 'extension')
 
 
 def createLockFile():
@@ -44,7 +46,7 @@ def takePhoto():
    if (not checkLockFile()):
       createLockFile()
       timestr = time.strftime("%Y%m%d-%H%M%S")
-      cmd = "raspistill {2} -t 1 -o {0}{1}.jpg 2>&1".format(GALLERY, timestr, PARAMETER)
+      cmd = "{0} {1} {2}{3}.{4} 2>&1".format(COMMAND, PARAMETER, GALLERY, timestr, EXTENSION)
       logging.warning(cmd)
       os.system(cmd)
       os.remove(LOCK_FILE)
@@ -95,7 +97,8 @@ def main():
    client.on_log = on_log
    client.username_pw_set(username=USERNAME, password=PASSWORD)
    client.connect(BROKER_ADDRESS)
-   client.subscribe(NODE + TOPIC)
+   for node in NODES:
+      client.subscribe(node + TOPIC)
    client.loop_forever()
 
 
@@ -103,7 +106,8 @@ if __name__ == '__main__':
    try:
       main()
    except KeyboardInterrupt:
-      os.remove(LOCK_FILE)
+      if (checkLockFile()):
+         os.remove(LOCK_FILE)
       sys.exit('interrupted')
       pass
 
