@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+#apt -y install python-pip
+#pip install paho-mqtt
+#apt -y python-paramiko
+
 #mosquitto_pub -h theEye -t 5ccf7f3c8da1/value -u esp8266 -P 0acht15 -m "{\"vcc\":3032,\"button\":false,\"pir\":true}"
 #mosquitto_pub -h theEye -t 5ccf7f3c8da1/value -u esp8266 -P 0acht15 -m "{\"vcc\":3032,\"button\":true,\"pir\":false}"
 
@@ -11,11 +15,14 @@ import time
 import os
 import sys
 import ConfigParser
+import paramiko
 
 
 #logging.basicConfig(level=logging.WARNING)
 logging.basicConfig(level=logging.INFO)
 #logging.basicConfig(level=logging.DEBUG)
+logging.getLogger("paramiko.transport").setLevel(logging.INFO)
+paramiko.util.log_to_file('/tmp/paramiko.log')
 
 
 config = ConfigParser.ConfigParser()
@@ -31,8 +38,13 @@ NODES = config.get('mqtt', 'nodes').split(',')
 TOPIC = config.get('mqtt', 'topic')
 COMMAND = config.get('camera', 'command')
 PARAMETER = config.get('camera', 'parameter')
+ID = config.get('camera', 'id')
 EXTENSION = config.get('camera', 'extension')
-
+REMOTE_HOST = config.get('remote', 'host')
+REMOTE_ENABLED = config.getboolean('remote', 'enabled')
+REMOTE_USERNAME = config.get('remote', 'username')
+REMOTE_PASSWORD = config.get('remote', 'password')
+REMOTE_FOLDER = config.get('remote', 'remoteFolder')
 
 def createLockFile():
    f = open(LOCK_FILE, "w+")
@@ -46,12 +58,25 @@ def takePhoto():
    if (not checkLockFile()):
       createLockFile()
       timestr = time.strftime("%Y%m%d-%H%M%S")
-      cmd = "{0} {1} {2}{3}.{4} 2>&1".format(COMMAND, PARAMETER, GALLERY, timestr, EXTENSION)
+      file = "{0}-{1}.{2}".format(ID, timestr, EXTENSION)
+      cmd = "{0} {1} {2}{3} 2>&1".format(COMMAND, PARAMETER, GALLERY, file)
       logging.warning(cmd)
       os.system(cmd)
       os.remove(LOCK_FILE)
+      if (REMOTE_ENABLED):
+         upload(GALLERY, file)
    else:
       logging.warning("takePhoto blocked")
+
+def upload(folder, file):
+   localfile = "{0}{1}".format(folder, file)
+   remotefile = "{0}{1}".format(REMOTE_FOLDER, file)
+   transport = paramiko.Transport((REMOTE_HOST, 22))
+   transport.connect(username = REMOTE_USERNAME, password = REMOTE_PASSWORD)
+   sftp = paramiko.SFTPClient.from_transport(transport)
+   sftp.put(localfile, remotefile)
+   sftp.close()
+   transport.close()
 
 
 def on_connect(client, userdata, flags, rc):
