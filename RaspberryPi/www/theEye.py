@@ -9,19 +9,12 @@ config = ConfigParser.ConfigParser()
 config.read('/data/theEye/RaspberryPi/theEye.ini')
 
 
-LOCK_FILE = config.get('path', 'lock_file')
-GALLERY = config.get('path', 'gallery')
-BROKER_ADDRESS = config.get('mqtt', 'broker_address')
-USERNAME = config.get('mqtt', 'username')
-PASSWORD = config.get('mqtt', 'password')
-NODE = config.get('mqtt', 'nodes')
-TOPIC = config.get('mqtt', 'topic')
-PARAMETER = config.get('camera', 'parameter')
-GALLERY_LINK = config.get('html', 'gallery_link')
+PATH_GALLERY = config.get('path', 'gallery')
+HTML_GALLERY_LINK = config.get('html', 'gallery_link')
 
 
 def getLastFile():
-   os.chdir(GALLERY)
+   os.chdir(PATH_GALLERY)
    list_of_files = glob.glob('*.jpg')
    latest_file = max(list_of_files, key=os.path.getctime)
    return latest_file
@@ -43,9 +36,9 @@ def footer():
 
 def site():
    print '''\
-      <p><a href="{GALLERY_LINK}">Gallery</a></p>
-      <p><img src="{GALLERY_LINK}/{LAST_FILE}" alt="{GALLERY_LINK}/{LAST_FILE}" width="320"></p>
-   '''.format(GALLERY_LINK=GALLERY_LINK, LAST_FILE=getLastFile())
+      <p><a href="{HTML_GALLERY_LINK}">Gallery</a></p>
+      <p><img src="{HTML_GALLERY_LINK}/{LAST_FILE}" alt="{HTML_GALLERY_LINK}/{LAST_FILE}" width="320"></p>
+   '''.format(HTML_GALLERY_LINK=HTML_GALLERY_LINK, LAST_FILE=getLastFile())
 
 
 def main():
@@ -61,4 +54,3 @@ if __name__ == '__main__':
    except KeyboardInterrupt:
       sys.exit('interrupted')
       pass
-
