@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 #apt -y install python-pip
+#apt -y install python-paramiko
 #pip install paho-mqtt
-#apt -y python-paramiko
 
 #mosquitto_pub -h theEye -t 5ccf7f3c8da1/value -u esp8266 -P 0acht15 -m "{\"vcc\":3032,\"button\":false,\"pir\":true}"
 #mosquitto_pub -h theEye -t 5ccf7f3c8da1/value -u esp8266 -P 0acht15 -m "{\"vcc\":3032,\"button\":true,\"pir\":false}"
