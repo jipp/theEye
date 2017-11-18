@@ -5,8 +5,8 @@
 # pip install paho-mqtt
 # apt apt -y install lighttpd
 
-#mosquitto_pub -h theEye -t test/value -u esp8266 -P 0acht15 -m "{\"vcc\":3032,\"button\":false,\"pir\":true}"
-#mosquitto_pub -h theEye -t test/value -u esp8266 -P 0acht15 -m "{\"vcc\":3032,\"button\":true,\"pir\":false}"
+#mosquitto_pub -h theEye -t cam/value -u esp8266 -P 0acht15 -m "{\"vcc\":3032,\"button\":false,\"pir\":true}"
+#mosquitto_pub -h theEye -t cam1/value -u esp8266 -P 0acht15 -m "{\"vcc\":3032,\"button\":true,\"pir\":false}"
 
 
 import paho.mqtt.client as mqtt
@@ -17,6 +17,7 @@ import os
 import sys
 import ConfigParser
 import paramiko
+import picamera
 
 
 #logging.basicConfig(level=logging.WARNING)
@@ -26,6 +27,7 @@ logging.getLogger("paramiko.transport").setLevel(logging.INFO)
 #paramiko.util.log_to_file('/tmp/paramiko.log')
 
 
+camera = picamera.PiCamera()
 config = ConfigParser.ConfigParser()
 config.read('/data/theEye/RaspberryPi/theEye.ini')
 
@@ -37,15 +39,19 @@ MQTT_USERNAME = config.get('mqtt', 'username')
 MQTT_PASSWORD = config.get('mqtt', 'password')
 MQTT_NODES = config.get('mqtt', 'nodes').split(',')
 MQTT_TOPIC = config.get('mqtt', 'topic')
-CAMERA_COMMAND = config.get('camera', 'command')
-CAMERA_PARAMETER = config.get('camera', 'parameter')
 CAMERA_ID = config.get('camera', 'id')
 CAMERA_EXTENSION = config.get('camera', 'extension')
+camera.rotation = config.get('camera', 'rotation')
+camera.hflip = config.getboolean('camera', 'hflip')
+camera.vflip = config.getboolean('camera', 'vflip')
+camera.resolution = (config.getint('camera', 'width'), config.getint('camera', 'height'))
+camera.led = config.getboolean('camera', 'led')
 REMOTE_HOST = config.get('remote', 'host')
 REMOTE_ENABLED = config.getboolean('remote', 'enabled')
 REMOTE_USERNAME = config.get('remote', 'username')
 REMOTE_PASSWORD = config.get('remote', 'password')
 REMOTE_FOLDER = config.get('remote', 'remoteFolder')
+
 
 def createLockFile():
    f = open(PATH_LOCK_FILE, "w+")
@@ -60,14 +66,15 @@ def takePhoto():
       createLockFile()
       timestr = time.strftime("%Y%m%d-%H%M%S")
       file = "{0}-{1}.{2}".format(CAMERA_ID, timestr, CAMERA_EXTENSION)
-      cmd = "{0} {1} {2}{3} 2>&1".format(CAMERA_COMMAND, CAMERA_PARAMETER, PATH_GALLERY, file)
-      logging.warning(cmd)
-      os.system(cmd)
+      picture = "{0}{1}".format(PATH_GALLERY, file)
+      logging.warning(picture)
+      camera.capture(picture)
       os.remove(PATH_LOCK_FILE)
       if (REMOTE_ENABLED):
          upload(PATH_GALLERY, file)
    else:
       logging.warning("takePhoto blocked")
+
 
 def upload(folder, file):
    localfile = "{0}{1}".format(folder, file)
