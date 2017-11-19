@@ -1,0 +1,12 @@
+# apt -y install lighttpd
+# apt -y install php-gd
+# apt -y install python-pip
+# apt -y install python-picamera
+
+# pip install -r requirements.txt
+
+# mkdir /data/lighttpd/gallery
+# ln -s /data/lighttpd/gallery/ /var/www/html
+# ln -s /data/theEye/RaspberryPi/www/theEye.py /var/www/html
+
+# install from https://sye.dk/sfpg/
