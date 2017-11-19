@@ -10,3 +10,7 @@
 # ln -s /data/theEye/RaspberryPi/www/theEye.py /var/www/html
 
 # install from https://sye.dk/sfpg/
+# wget https://sye.dk/sfpg/Single_File_PHP_Gallery_4.7.0.zip
+# mv Single_File_PHP_Gallery_4.7.0.zip /var/www/html/gallery
+# cd /var/www/html/gallery
+# unzip Single_File_PHP_Gallery_4.7.0.zip
