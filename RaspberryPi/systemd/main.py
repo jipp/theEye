@@ -1,10 +1,5 @@
 #!/usr/bin/env python
 
-# apt -y install python-pip
-# apt -y install python-paramiko
-# pip install paho-mqtt
-# apt apt -y install lighttpd
-
 #mosquitto_pub -h theEye -t cam/value -u esp8266 -P 0acht15 -m "{\"vcc\":3032,\"button\":false,\"pir\":true}"
 #mosquitto_pub -h theEye -t cam1/value -u esp8266 -P 0acht15 -m "{\"vcc\":3032,\"button\":true,\"pir\":false}"
 

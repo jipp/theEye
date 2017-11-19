@@ -1,11 +1,5 @@
 #!/usr/bin/env python
 
-# mkdir /data/lighttpd/gallery
-# ln -s /data/lighttpd/gallery/ /var/www/html
-# ln -s /data/theEye/RaspberryPi/www/theEye.py /var/www/html
-# apt -y install php-gd
-# install https://sye.dk/sfpg/
-
 import ConfigParser
 import glob
 import os
