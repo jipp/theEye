@@ -77,7 +77,12 @@ def upload(folder, file):
    transport = paramiko.Transport((REMOTE_HOST, 22))
    transport.connect(username = REMOTE_USERNAME, password = REMOTE_PASSWORD)
    sftp = paramiko.SFTPClient.from_transport(transport)
-   sftp.put(localfile, remotefile)
+   try:
+      sftp.put(localfile, remotefile)
+   except Exception as e:
+      print(e)
+      print('host: ' + REMOTE_HOST + '; username: ' + REMOTE_USERNAME + '; password: ' + REMOTE_PASSWORD)
+      print(localfile + ' -> ' + remotefile)
    sftp.close()
    transport.close()
 
