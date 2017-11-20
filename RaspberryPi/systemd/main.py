@@ -142,4 +142,3 @@ if __name__ == '__main__':
       if (checkLockFile()):
          os.remove(PATH_LOCK_FILE)
       sys.exit('interrupted')
-      pass
