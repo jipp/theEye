@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-#mosquitto_pub -h theEye -t cam/value -u esp8266 -P 0acht15 -m "{\"vcc\":3032,\"button\":false,\"pir\":true}"
-#mosquitto_pub -h theEye -t cam1/value -u esp8266 -P 0acht15 -m "{\"vcc\":3032,\"button\":true,\"pir\":false}"
+# mosquitto_pub -h theEye -t cam/value -u esp8266 -P 0acht15 -m "{\"vcc\":3032,\"button\":false,\"pir\":true}"
+# mosquitto_pub -h theEye -t cam1/value -u esp8266 -P 0acht15 -m "{\"vcc\":3032,\"button\":true,\"pir\":false}"
 
 
 import paho.mqtt.client as mqtt
@@ -27,8 +27,8 @@ config = ConfigParser.ConfigParser()
 config.read('/data/theEye/RaspberryPi/theEye.ini')
 
 
-PATH_LOCK_FILE = config.get('path', 'lock_file')
-PATH_GALLERY = config.get('path', 'gallery')
+LOCAL_LOCK_FILE = config.get('local', 'lock_file')
+LOCAL_GALLERY_FOLDER = config.get('local', 'gallery_folder')
 MQTT_BROKER_ADDRESS = config.get('mqtt', 'broker_address')
 MQTT_USERNAME = config.get('mqtt', 'username')
 MQTT_PASSWORD = config.get('mqtt', 'password')
@@ -45,35 +45,35 @@ REMOTE_HOST = config.get('remote', 'host')
 REMOTE_ENABLED = config.getboolean('remote', 'enabled')
 REMOTE_USERNAME = config.get('remote', 'username')
 REMOTE_PASSWORD = config.get('remote', 'password')
-REMOTE_FOLDER = config.get('remote', 'remoteFolder')
+REMOTE_FOLDER = config.get('remote', 'remote_folder')
 
 
 def createLockFile():
-   f = open(PATH_LOCK_FILE, "w+")
+   f = open(LOCAL_LOCK_FILE, "w+")
 
 
-def checkLockFile():
-   return os.path.isfile(PATH_LOCK_FILE)
+def isLockFileAvailable():
+   return os.path.isfile(LOCAL_LOCK_FILE)
 
 
 def takePhoto():
-   if (not checkLockFile()):
+   if (not isLockFileAvailable()):
       createLockFile()
       timestr = time.strftime("%Y%m%d-%H%M%S")
       file = "{0}-{1}.{2}".format(CAMERA_ID, timestr, CAMERA_EXTENSION)
-      picture = "{0}{1}".format(PATH_GALLERY, file)
-      logging.warning(picture)
+      picture = "{0}/{1}".format(LOCAL_GALLERY_FOLDER, file)
+      logging.warning('saving picture: ' + picture)
       camera.capture(picture)
-      os.remove(PATH_LOCK_FILE)
+      os.remove(LOCAL_LOCK_FILE)
       if (REMOTE_ENABLED):
-         upload(PATH_GALLERY, file)
+         upload(LOCAL_GALLERY_FOLDER, file)
    else:
       logging.warning("takePhoto blocked")
 
 
 def upload(folder, file):
-   localfile = "{0}{1}".format(folder, file)
-   remotefile = "{0}{1}".format(REMOTE_FOLDER, file)
+   localfile = "{0}/{1}".format(folder, file)
+   remotefile = "{0}/{1}".format(REMOTE_FOLDER, file)
    transport = paramiko.Transport((REMOTE_HOST, 22))
    transport.connect(username = REMOTE_USERNAME, password = REMOTE_PASSWORD)
    sftp = paramiko.SFTPClient.from_transport(transport)
@@ -139,6 +139,7 @@ if __name__ == '__main__':
    try:
       main()
    except KeyboardInterrupt:
-      if (checkLockFile()):
-         os.remove(PATH_LOCK_FILE)
+      if (isLockFileAvailable()):
+         os.remove(LOCAL_LOCK_FILE)
+         print('removed ' + LOCAL_LOCK_FILE)
       sys.exit('interrupted')
