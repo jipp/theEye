@@ -1,8 +1,3 @@
-# cp theEye.service /lib/systemd/system/
-# systemctl enable theEye
-# systemctl start theEye
-# systemctl status theEye
-
 [Unit]
 Description=theEye daemon
 After=multi-user.target

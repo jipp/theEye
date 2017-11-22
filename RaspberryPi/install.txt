@@ -1,16 +1,20 @@
-# apt -y install lighttpd
-# apt -y install php-gd
-# apt -y install python-pip
-# apt -y install python-picamera
+# install lighttpd
+
+# apt -y install python-pip python-picamera libffi-dev
 
 # pip install -r requirements.txt
 
-# mkdir /data/lighttpd/gallery
+# mkdir -p /data/lighttpd/gallery
 # ln -s /data/lighttpd/gallery/ /var/www/html
 # ln -s /data/theEye/RaspberryPi/www/theEye.py /var/www/html
 
 # install from https://sye.dk/sfpg/
+# cd /tmp
 # wget https://sye.dk/sfpg/Single_File_PHP_Gallery_4.7.0.zip
-# mv Single_File_PHP_Gallery_4.7.0.zip /var/www/html/gallery
-# cd /var/www/html/gallery
 # unzip Single_File_PHP_Gallery_4.7.0.zip
+# mv index.php /var/www/html/gallery
+
+# cp theEye.service /lib/systemd/system/
+# systemctl enable theEye
+# systemctl start theEye
+# systemctl status theEye
