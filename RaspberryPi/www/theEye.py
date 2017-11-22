@@ -9,12 +9,12 @@ config = ConfigParser.ConfigParser()
 config.read('/data/theEye/RaspberryPi/theEye.ini')
 
 
-PATH_GALLERY = config.get('path', 'gallery')
+LOCAL_GALLERY_FOLDER = config.get('local', 'gallery_folder')
 HTML_GALLERY_LINK = config.get('html', 'gallery_link')
 
 
 def getLastFile():
-   os.chdir(PATH_GALLERY)
+   os.chdir(LOCAL_GALLERY_FOLDER)
    list_of_files = glob.glob('*.jpg')
    latest_file = max(list_of_files, key=os.path.getctime)
    return latest_file

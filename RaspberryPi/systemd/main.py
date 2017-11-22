@@ -5,6 +5,7 @@
 
 
 import paho.mqtt.client as mqtt
+import paho.mqtt.publish as publish
 import json
 import logging
 import time
@@ -29,11 +30,11 @@ config.read('/data/theEye/RaspberryPi/theEye.ini')
 
 LOCAL_LOCK_FILE = config.get('local', 'lock_file')
 LOCAL_GALLERY_FOLDER = config.get('local', 'gallery_folder')
+LOCAL_LOCATION = config.get('local', 'location')
 MQTT_BROKER_ADDRESS = config.get('mqtt', 'broker_address')
 MQTT_USERNAME = config.get('mqtt', 'username')
 MQTT_PASSWORD = config.get('mqtt', 'password')
 MQTT_NODES = config.get('mqtt', 'nodes').split(',')
-MQTT_TOPIC = config.get('mqtt', 'topic')
 CAMERA_ID = config.get('camera', 'id')
 CAMERA_EXTENSION = config.get('camera', 'extension')
 camera.rotation = config.get('camera', 'rotation')
@@ -69,6 +70,7 @@ def takePhoto():
          upload(LOCAL_GALLERY_FOLDER, file)
    else:
       logging.warning("takePhoto blocked")
+   return picture
 
 
 def upload(folder, file):
@@ -94,17 +96,18 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, message):
    dictionary = {}
    logging.info(message.topic + " " + str(message.qos) + " " + str(message.payload))
-   payload = json.loads(message.payload)
-   node = message.topic.split("/")[0]
-   dictionary['button']  = payload['button']
-   dictionary['pir']     = payload['pir']
-   logging.info('node: ' + node + ', button: ' + str(returnValue(dictionary, 'button')) + ', pir: ' + str(returnValue(dictionary, 'pir')))
-   if (dictionary['button']):
-      logging.info('button triggered')
-      takePhoto()
-   if (dictionary['pir']):
-      logging.info('pir triggered')
-      takePhoto()
+   try:
+      payload = json.loads(message.payload)
+      node = message.topic.split("/")[0]
+      for key in payload:
+         if key != 'vcc':
+            if payload[key]:
+               logging.info(key + ' triggered')
+               picture = takePhoto()
+               publish.single(CAMERA_ID + "/status", "{\"location\":" + LOCAL_LOCATION + ",\"node\":" + node + ",\"picture\":" + picture + "}", hostname = MQTT_BROKER_ADDRESS, auth = {'username': MQTT_USERNAME, 'password': MQTT_PASSWORD})
+   except Exception as e:
+      print(e)
+
 
 
 def on_subscribe(client, userdata, mid, granted_qos):
@@ -130,8 +133,9 @@ def main():
    client.on_log = on_log
    client.username_pw_set(username=MQTT_USERNAME, password=MQTT_PASSWORD)
    client.connect(MQTT_BROKER_ADDRESS)
+   client.subscribe(CAMERA_ID + "/value")
    for node in MQTT_NODES:
-      client.subscribe(node + MQTT_TOPIC)
+      client.subscribe(node + "/value")
    client.loop_forever()
 
 
