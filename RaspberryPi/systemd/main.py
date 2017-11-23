@@ -29,7 +29,6 @@ config = ConfigParser.ConfigParser()
 config.read('/data/theEye/RaspberryPi/theEye.ini')
 
 
-LOCAL_LOCK_FILE = config.get('local', 'lock_file')
 LOCAL_GALLERY_FOLDER = config.get('local', 'gallery_folder')
 LOCAL_LOCATION = config.get('local', 'location')
 MQTT_BROKER_ADDRESS = config.get('mqtt', 'broker_address')
@@ -50,27 +49,15 @@ REMOTE_PASSWORD = config.get('remote', 'password')
 REMOTE_FOLDER = config.get('remote', 'remote_folder')
 
 
-def createLockFile():
-   f = open(LOCAL_LOCK_FILE, "w+")
-
-
-def isLockFileAvailable():
-   return os.path.isfile(LOCAL_LOCK_FILE)
-
 
 def takePhoto():
-   if (not isLockFileAvailable()):
-      createLockFile()
-      timestr = time.strftime("%Y%m%d-%H%M%S")
-      file = "{0}-{1}.{2}".format(CAMERA_ID, timestr, CAMERA_EXTENSION)
-      picture = "{0}/{1}".format(LOCAL_GALLERY_FOLDER, file)
-      logging.warning('saving picture: ' + picture)
-      camera.capture(picture)
-      os.remove(LOCAL_LOCK_FILE)
-      if (REMOTE_ENABLED):
-         upload(LOCAL_GALLERY_FOLDER, file)
-   else:
-      logging.warning("takePhoto blocked")
+   timestr = time.strftime("%Y%m%d-%H%M%S")
+   file = "{0}-{1}.{2}".format(CAMERA_ID, timestr, CAMERA_EXTENSION)
+   picture = "{0}/{1}".format(LOCAL_GALLERY_FOLDER, file)
+   logging.warning('saving picture: ' + picture)
+   camera.capture(picture)
+   if (REMOTE_ENABLED):
+      upload(LOCAL_GALLERY_FOLDER, file)
    return picture
 
 
