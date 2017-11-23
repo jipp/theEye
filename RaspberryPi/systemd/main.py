@@ -81,9 +81,12 @@ def on_connect(client, userdata, flags, rc):
    logging.info('rc: ' + str(rc))
 
 
+def on_disconnect(client, userdata, rc):
+   logging.info('rc: ' + str(rc))
+
+
 def on_message(client, userdata, message):
-   dictionary = {}
-   logging.info(message.topic + " " + str(message.qos) + " " + str(message.payload))
+   logging.info('topic: ' + message.topic + ', qos:  ' + str(message.qos) + ', payload:  ' + str(message.payload))
    try:
       payload = json.loads(message.payload)
       node = message.topic.split("/")[0]
@@ -97,25 +100,18 @@ def on_message(client, userdata, message):
       print(e)
 
 
-
 def on_subscribe(client, userdata, mid, granted_qos):
-   logging.info('Subscribed: ' +  str(userdata) + ' ' + str(mid) + ' ' + str(granted_qos))
+   logging.info('mid: ' + str(mid) + ', granted_qos: ' + str(granted_qos))
 
 
 def on_log(client, userdata, level, buf):
    logging.debug(buf)
 
 
-def returnValue(dictionary, key):
-   if (key in dictionary):
-      return dictionary[key]
-   else:
-      return ''
-
-
 def main():
    client = mqtt.Client()
    client.on_connect = on_connect
+   client.on_disconnect = on_disconnect
    client.on_message = on_message
    client.on_subscribe = on_subscribe
    client.on_log = on_log
