@@ -122,8 +122,9 @@ def main():
    client.username_pw_set(username=MQTT_USERNAME, password=MQTT_PASSWORD)
    client.connect(MQTT_BROKER_ADDRESS)
    client.subscribe(CAMERA_ID + "/value")
-   for node in MQTT_NODES:
-      client.subscribe(node + "/value")
+   if not MQTT_NODES:
+      for node in MQTT_NODES:
+         client.subscribe(node + "/value")
    client.loop_forever()
 
 
@@ -131,7 +132,4 @@ if __name__ == '__main__':
    try:
       main()
    except KeyboardInterrupt:
-      if (isLockFileAvailable()):
-         os.remove(LOCAL_LOCK_FILE)
-         print('removed ' + LOCAL_LOCK_FILE)
       sys.exit('interrupted')
