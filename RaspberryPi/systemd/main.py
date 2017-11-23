@@ -14,6 +14,7 @@ import sys
 import ConfigParser
 import paramiko
 import picamera
+import platform
 
 
 #logging.basicConfig(level=logging.WARNING)
@@ -35,7 +36,7 @@ MQTT_BROKER_ADDRESS = config.get('mqtt', 'broker_address')
 MQTT_USERNAME = config.get('mqtt', 'username')
 MQTT_PASSWORD = config.get('mqtt', 'password')
 MQTT_NODES = config.get('mqtt', 'nodes').split(',')
-CAMERA_ID = config.get('camera', 'id')
+CAMERA_ID = platform.node()
 CAMERA_EXTENSION = config.get('camera', 'extension')
 camera.rotation = config.get('camera', 'rotation')
 camera.hflip = config.getboolean('camera', 'hflip')
