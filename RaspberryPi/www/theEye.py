@@ -9,12 +9,12 @@ config = ConfigParser.ConfigParser()
 config.read('/data/theEye/RaspberryPi/theEye.ini')
 
 
-LOCAL_GALLERY_FOLDER = config.get('local', 'gallery_folder')
-HTML_GALLERY_LINK = config.get('html', 'gallery_link')
+local_folder = config.get('local', 'folder')
+gallery_link = config.get('gallery', 'link')
 
 
 def getLastFile():
-   os.chdir(LOCAL_GALLERY_FOLDER)
+   os.chdir(local_folder)
    list_of_files = glob.glob('*.jpg')
    latest_file = max(list_of_files, key=os.path.getctime)
    return latest_file
@@ -36,16 +36,15 @@ def footer():
 
 def site():
    print '''\
-      <p><a href="{HTML_GALLERY_LINK}">Gallery</a></p>
-      <p><img src="{HTML_GALLERY_LINK}/{LAST_FILE}" alt="{HTML_GALLERY_LINK}/{LAST_FILE}" width="320"></p>
-   '''.format(HTML_GALLERY_LINK=HTML_GALLERY_LINK, LAST_FILE=getLastFile())
+      <p><a href="{gallery_link}">Gallery</a></p>
+      <p><img src="{gallery_link}/{last_file}" alt="{gallery_link}/{last_file}" width="320"></p>
+   '''.format(gallery_link=gallery_link, last_file=getLastFile())
 
 
 def main():
    header()
    site()
    footer()
-   getLastFile()
 
 
 if __name__ == '__main__':
