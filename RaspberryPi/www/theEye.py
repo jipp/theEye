@@ -16,7 +16,10 @@ gallery_link = config.get('gallery', 'link')
 def getLastFile():
    os.chdir(local_folder)
    list_of_files = glob.glob('*.jpg')
-   latest_file = max(list_of_files, key=os.path.getctime)
+   if list_of_files:
+      latest_file = max(list_of_files, key=os.path.getctime)
+   else:
+      latest_file = ''
    return latest_file
 
 
@@ -28,11 +31,6 @@ def header():
    <body>
    '''
 
-def footer():
-   print '''\
-   </body>
-</html>
-   '''
 
 def site():
    print '''\
@@ -41,6 +39,13 @@ def site():
       <form action="trigger.py" method="get">
       <p>take photo: <button type="submit">Now</button>
    '''.format(gallery_link=gallery_link, last_file=getLastFile())
+
+
+def footer():
+   print '''\
+   </body>
+</html>
+   '''
 
 
 def main():
