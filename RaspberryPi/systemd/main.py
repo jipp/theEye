@@ -3,13 +3,12 @@
 # mosquitto_pub -h lemonpi -t theEye1/value -u esp8266 -P 0acht15 -m "{\"vcc\":3032,\"manual\":true}"
 # mosquitto_sub -v -h lemonpi -t theEye1/# -u esp8266 -P 0acht15
 
-
 import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
 import json
 import logging
 import time
-import os
+#import os
 import sys
 import ConfigParser
 import paramiko
