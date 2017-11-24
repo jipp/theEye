@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-# mosquitto_pub -h theEye -t cam/value -u esp8266 -P 0acht15 -m "{\"vcc\":3032,\"button\":false,\"pir\":true}"
-# mosquitto_pub -h theEye -t cam1/value -u esp8266 -P 0acht15 -m "{\"vcc\":3032,\"button\":true,\"pir\":false}"
+# mosquitto_pub -h lemonpi -t theEye1/value -u esp8266 -P 0acht15 -m "{\"vcc\":3032,\"manual\":true}"
+# mosquitto_sub -v -h lemonpi -t theEye1/# -u esp8266 -P 0acht15
 
 
 import paho.mqtt.client as mqtt
@@ -25,56 +25,59 @@ logging.getLogger("paramiko.transport").setLevel(logging.INFO)
 
 
 camera = picamera.PiCamera()
+
 config = ConfigParser.ConfigParser()
 config.read('/data/theEye/RaspberryPi/theEye.ini')
 
-
-LOCAL_GALLERY_FOLDER = config.get('local', 'gallery_folder')
-LOCAL_LOCATION = config.get('local', 'location')
-MQTT_BROKER_ADDRESS = config.get('mqtt', 'broker_address')
-MQTT_USERNAME = config.get('mqtt', 'username')
-MQTT_PASSWORD = config.get('mqtt', 'password')
-MQTT_NODES = config.get('mqtt', 'nodes').split(',')
-CAMERA_ID = platform.node()
-CAMERA_EXTENSION = config.get('camera', 'extension')
+local_folder = config.get('local', 'folder')
+local_description = config.get('local', 'description')
+mqtt_host = config.get('mqtt', 'host')
+mqtt_username = config.get('mqtt', 'username')
+mqtt_password = config.get('mqtt', 'password')
+mqtt_nodes = config.get('mqtt', 'nodes').split(',')
+mqtt_status = config.get('mqtt', 'status')
 camera.rotation = config.get('camera', 'rotation')
 camera.hflip = config.getboolean('camera', 'hflip')
 camera.vflip = config.getboolean('camera', 'vflip')
 camera.resolution = (config.getint('camera', 'width'), config.getint('camera', 'height'))
 camera.led = config.getboolean('camera', 'led')
-REMOTE_HOST = config.get('remote', 'host')
-REMOTE_ENABLED = config.getboolean('remote', 'enabled')
-REMOTE_USERNAME = config.get('remote', 'username')
-REMOTE_PASSWORD = config.get('remote', 'password')
-REMOTE_FOLDER = config.get('remote', 'remote_folder')
+remote_enabled = config.getboolean('remote', 'enable')
+remote_host = config.get('remote', 'host')
+remote_username = config.get('remote', 'username')
+remote_password = config.get('remote', 'password')
+remote_folder = config.get('remote', 'folder')
+id = platform.node()
 
 
-
-def takePhoto():
-   timestr = time.strftime("%Y%m%d-%H%M%S")
-   file = "{0}-{1}.{2}".format(CAMERA_ID, timestr, CAMERA_EXTENSION)
-   picture = "{0}/{1}".format(LOCAL_GALLERY_FOLDER, file)
-   logging.warning('saving picture: ' + picture)
-   camera.capture(picture)
-   if (REMOTE_ENABLED):
-      upload(LOCAL_GALLERY_FOLDER, file)
-   return picture
+def takePhoto(picture, sensor, trigger):
+   output = "{0}/{1}".format(local_folder, picture)
+   camera.capture(output)
+   logging.info('saving output: ' + output)
+   publish.single(mqtt_status + "/status", "{\"id\":" + id + ",\"description\":" + local_description + ",\"sensor\":" + sensor + ",\"trigger\":" + trigger + ",\"picture\":" + picture + ",\"upload\":" + str(remote_enabled) + "}", hostname = mqtt_host, auth = {'username': mqtt_username, 'password': mqtt_password})
+   if (remote_enabled):
+      upload(picture)
 
 
-def upload(folder, file):
-   localfile = "{0}/{1}".format(folder, file)
-   remotefile = "{0}/{1}".format(REMOTE_FOLDER, file)
-   transport = paramiko.Transport((REMOTE_HOST, 22))
-   transport.connect(username = REMOTE_USERNAME, password = REMOTE_PASSWORD)
+def upload(picture):
+   localfile = "{0}/{1}".format(local_folder, picture)
+   remotefile = "{0}/{1}".format(remote_folder, picture)
+   transport = paramiko.Transport((remote_host, 22))
+   transport.connect(username = remote_username, password = remote_password)
    sftp = paramiko.SFTPClient.from_transport(transport)
    try:
       sftp.put(localfile, remotefile)
    except Exception as e:
       print(e)
-      print('host: ' + REMOTE_HOST + '; username: ' + REMOTE_USERNAME + '; password: ' + REMOTE_PASSWORD)
+      print('host: ' + remote_host + '; username: ' + remote_username + '; password: ' + remote_password)
       print(localfile + ' -> ' + remotefile)
    sftp.close()
    transport.close()
+
+
+def get_picture_name():
+   timestr = time.strftime("%Y%m%d-%H%M%S")
+   picture = "{0}-{1}.jpg".format(id, timestr)
+   return picture
 
 
 def on_connect(client, userdata, flags, rc):
@@ -86,16 +89,16 @@ def on_disconnect(client, userdata, rc):
 
 
 def on_message(client, userdata, message):
-   logging.info('topic: ' + message.topic + ', qos:  ' + str(message.qos) + ', payload:  ' + str(message.payload))
+   logging.info('topic: ' + message.topic + ', qos: ' + str(message.qos) + ', payload: ' + str(message.payload))
    try:
       payload = json.loads(message.payload)
-      node = message.topic.split("/")[0]
+      sensor = message.topic.split("/")[0]
       for key in payload:
          if key != 'vcc':
             if payload[key]:
                logging.info(key + ' triggered')
-               picture = takePhoto()
-               publish.single(CAMERA_ID + "/status", "{\"location\":" + LOCAL_LOCATION + ",\"node\":" + node + ",\"picture\":" + picture + "}", hostname = MQTT_BROKER_ADDRESS, auth = {'username': MQTT_USERNAME, 'password': MQTT_PASSWORD})
+               picture = get_picture_name()
+               takePhoto(picture, sensor, key)
    except Exception as e:
       print(e)
 
@@ -115,11 +118,11 @@ def main():
    client.on_message = on_message
    client.on_subscribe = on_subscribe
    client.on_log = on_log
-   client.username_pw_set(username=MQTT_USERNAME, password=MQTT_PASSWORD)
-   client.connect(MQTT_BROKER_ADDRESS)
-   client.subscribe(CAMERA_ID + "/value")
-   if not MQTT_NODES:
-      for node in MQTT_NODES:
+   client.username_pw_set(username=mqtt_username, password=mqtt_password)
+   client.connect(mqtt_host)
+   client.subscribe(id + "/value")
+   if not mqtt_nodes:
+      for node in mqtt_nodes:
          client.subscribe(node + "/value")
    client.loop_forever()
 
@@ -128,4 +131,5 @@ if __name__ == '__main__':
    try:
       main()
    except KeyboardInterrupt:
+      camera.close()
       sys.exit('interrupted')
