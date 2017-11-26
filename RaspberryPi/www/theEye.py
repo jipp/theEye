@@ -35,7 +35,7 @@ def header():
 def site():
    print '''\
       <p><a href="{gallery_link}">Gallery</a></p>
-      <p><img src="{gallery_link}/{last_file}" alt="{gallery_link}/{last_file}" width="320"></p>
+      <p><a href="{gallery_link}/{last_file}"><img src="{gallery_link}/{last_file}" alt="{gallery_link}/{last_file}" width="320"></a></p>
       <form action="trigger.py" method="get">
       <p>take photo: <button type="submit">Now</button>
    '''.format(gallery_link=gallery_link, last_file=getLastFile())
