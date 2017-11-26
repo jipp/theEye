@@ -120,9 +120,8 @@ def main():
    client.username_pw_set(username=mqtt_username, password=mqtt_password)
    client.connect(mqtt_host)
    client.subscribe(id + "/value")
-   if not mqtt_nodes:
-      for node in mqtt_nodes:
-         client.subscribe(node + "/value")
+   for node in mqtt_nodes:
+      client.subscribe(node + "/value")
    client.loop_forever()
 
 
