@@ -8,7 +8,6 @@ import paho.mqtt.publish as publish
 import json
 import logging
 import time
-#import os
 import sys
 import ConfigParser
 import paramiko
@@ -81,6 +80,9 @@ def get_picture_name():
 
 def on_connect(client, userdata, flags, rc):
    logging.info('rc: ' + str(rc))
+   client.subscribe(id + "/value")
+   for node in mqtt_nodes:
+      client.subscribe(node + "/value")
 
 
 def on_disconnect(client, userdata, rc):
@@ -119,9 +121,9 @@ def main():
    client.on_log = on_log
    client.username_pw_set(username=mqtt_username, password=mqtt_password)
    client.connect(mqtt_host)
-   client.subscribe(id + "/value")
-   for node in mqtt_nodes:
-      client.subscribe(node + "/value")
+#   client.subscribe(id + "/value")
+#   for node in mqtt_nodes:
+#      client.subscribe(node + "/value")
    client.loop_forever()
 
 
