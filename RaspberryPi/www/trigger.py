@@ -2,16 +2,21 @@
 
 import paho.mqtt.publish as publish
 import ConfigParser
+import sys
 import platform
 
 
+id = platform.node()
 config = ConfigParser.ConfigParser()
 config.read('/data/theEye/RaspberryPi/theEye.ini')
 
-mqtt_host = config.get('mqtt', 'host')
-mqtt_username = config.get('mqtt', 'username')
-mqtt_password = config.get('mqtt', 'password')
-id = platform.node()
+try:
+   mqtt_host = config.get('mqtt', 'host')
+   mqtt_username = config.get('mqtt', 'username')
+   mqtt_password = config.get('mqtt', 'password')
+except Exception as e:
+   print(e)
+   sys.exit('interrupted')
 
 
 def redirect():

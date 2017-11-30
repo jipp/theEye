@@ -3,14 +3,19 @@
 import ConfigParser
 import glob
 import os
+import sys
 
 
 config = ConfigParser.ConfigParser()
 config.read('/data/theEye/RaspberryPi/theEye.ini')
 
 
-local_folder = config.get('local', 'folder')
-gallery_link = config.get('gallery', 'link')
+try:
+   local_folder = config.get('local', 'folder')
+   gallery_link = config.get('gallery', 'link')
+except Exception as e:
+   print(e)
+   sys.exit('interrupted')
 
 
 def getLastFile():
@@ -37,7 +42,7 @@ def site():
       <p><a href="{gallery_link}">Gallery</a></p>
       <p><a href="{gallery_link}/{last_file}"><img src="{gallery_link}/{last_file}" alt="{gallery_link}/{last_file}" width="320"></a></p>
       <form action="trigger.py" method="get">
-      <p>take photo: <button type="submit">Now</button>
+      <p>take photo: <button type="submit">Now</button></p>
    '''.format(gallery_link=gallery_link, last_file=getLastFile())
 
 
