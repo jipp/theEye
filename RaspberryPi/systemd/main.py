@@ -21,9 +21,14 @@ logging.basicConfig(level=logging.INFO)
 logging.getLogger("paramiko.transport").setLevel(logging.INFO)
 #paramiko.util.log_to_file('/tmp/paramiko.log')
 
+try:
+   camera = picamera.PiCamera()
+except Exception as e:
+   print(e)
+   sys.exit('interrupted')
 
-camera = picamera.PiCamera()
 
+client = mqtt.Client()
 config = ConfigParser.ConfigParser()
 config.read('/data/theEye/RaspberryPi/theEye.ini')
 
@@ -79,14 +84,14 @@ def get_picture_name():
 
 
 def on_connect(client, userdata, flags, rc):
-   logging.info('rc: ' + str(rc))
+   logging.info('on_connect rc: ' + str(rc))
    client.subscribe(id + "/value")
    for node in mqtt_nodes:
       client.subscribe(node + "/value")
 
 
 def on_disconnect(client, userdata, rc):
-   logging.info('rc: ' + str(rc))
+   logging.info('on_disconnect rc: ' + str(rc))
 
 
 def on_message(client, userdata, message):
@@ -113,7 +118,7 @@ def on_log(client, userdata, level, buf):
 
 
 def main():
-   client = mqtt.Client()
+#   client = mqtt.Client()
    client.on_connect = on_connect
    client.on_disconnect = on_disconnect
    client.on_message = on_message
@@ -121,9 +126,6 @@ def main():
    client.on_log = on_log
    client.username_pw_set(username=mqtt_username, password=mqtt_password)
    client.connect(mqtt_host)
-#   client.subscribe(id + "/value")
-#   for node in mqtt_nodes:
-#      client.subscribe(node + "/value")
    client.loop_forever()
 
 
@@ -132,4 +134,5 @@ if __name__ == '__main__':
       main()
    except KeyboardInterrupt:
       camera.close()
+      client.disconnect()
       sys.exit('interrupted')
