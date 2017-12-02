@@ -1,22 +1,28 @@
-# install lighttpd
-
+# actor
 # apt -y install python-pip python-picamera libffi-dev
-
 # pip install -r requirements.txt
+# mkdir -p /data/lighttpd/gallery
+# chmod 777 /data/lighttpd/gallery
+# cp theEye.service /lib/systemd/system/
+# systemctl enable theEye
+# systemctl start theEye
+# systemctl status theEye
+# accept host key for sftp transmission
 
+
+# broker
+# install mosquitto
+
+
+# publisher
+# install lighttpd
 # mkdir -p /data/lighttpd/gallery
 # chmod 777 /data/lighttpd/gallery
 # ln -s /data/lighttpd/gallery/ /var/www/html
 # ln -s /data/theEye/RaspberryPi/www/theEye.py /var/www/html
 # ln -s /data/theEye/RaspberryPi/www/trigger.py /var/www/html
-
 # install from https://sye.dk/sfpg/
 # cd /tmp
 # wget https://sye.dk/sfpg/Single_File_PHP_Gallery_4.7.0.zip
 # unzip Single_File_PHP_Gallery_4.7.0.zip
 # mv index.php /var/www/html/gallery
-
-# cp theEye.service /lib/systemd/system/
-# systemctl enable theEye
-# systemctl start theEye
-# systemctl status theEye
